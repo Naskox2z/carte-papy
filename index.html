@@ -193,7 +193,11 @@ On t'aime très fort. Bon anniversaire ❤️🇵🇹</textarea>
           📂 Charger une sauvegarde
           <input type="file" id="input-load" accept="application/json" hidden>
         </label>
+        <button id="btn-publish" class="btn-seal small" type="button" style="background:var(--pine);">🌐 Publier sur le lien</button>
       </div>
+      <p id="submit-status" style="font-size:.8rem; opacity:.7; text-align:center; margin-top:8px;">
+        Après avoir chargé/vérifié une proposition, "Publier" télécharge <code>published.json</code> — uploade-le sur ton repo GitHub (même dossier que index.html) pour le mettre en ligne.
+      </p>
 
       <button id="btn-start" class="btn-seal" type="button">🎉 Voir la carte</button>
     </div>
@@ -295,6 +299,47 @@ let cardAudioUrl = null;
 let photoIndex = 0;
 let quizIndex = 0;
 
+// --- version publiée : un simple fichier JSON à côté d'index.html, pas d'API ---
+// va chercher published.json (s'il existe) et pré-remplit le formulaire avec
+async function loadPublished(){
+  try{
+    const res = await fetch('./published.json', { cache: 'no-store' });
+    if(!res.ok) return;
+    const data = await res.json();
+    if(data.grandpaName) document.getElementById('input-name').value = data.grandpaName;
+    if(data.message) document.getElementById('input-message').value = data.message;
+    if(data.signature) document.getElementById('input-signature').value = data.signature;
+    if(data.candleCount) document.getElementById('input-candles').value = data.candleCount;
+    if(data.photos && data.photos.length){ photosState = data.photos; renderPhotoList(); }
+    if(data.quiz && data.quiz.length) populateQuizBuilder(data.quiz);
+    if(data.audio) audioDataUrl = data.audio;
+    document.getElementById('submit-status').textContent = '✅ Version publiée chargée automatiquement';
+  }catch(err){
+    // pas de published.json (ou ouvert en fichier local) : formulaire vide, comportement normal
+  }
+}
+
+// télécharge l'état actuel du formulaire sous le nom exact "published.json"
+// à uploader sur le repo GitHub (à côté d'index.html) pour que ça apparaisse pour tout le monde
+function publishToLink(){
+  const data = {
+    grandpaName: document.getElementById('input-name').value,
+    message: document.getElementById('input-message').value,
+    signature: document.getElementById('input-signature').value,
+    candleCount: Number(document.getElementById('input-candles').value) || 5,
+    quiz: readQuizFromForm(),
+    photos: photosState,
+    audio: audioDataUrl
+  };
+  const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'published.json'; a.click();
+  URL.revokeObjectURL(url);
+  document.getElementById('submit-status').textContent = '✅ published.json téléchargé — upload-le sur ton repo GitHub';
+}
+document.getElementById('btn-publish').addEventListener('click', publishToLink);
+
 // --- upload photos ---
 document.getElementById('input-photos').addEventListener('change', (e) => {
   Array.from(e.target.files).forEach(file => {
@@ -384,7 +429,7 @@ function populateQuizBuilder(quizArr){
   const blocks = document.querySelectorAll('.quiz-block');
   quizArr.forEach((q, i) => {
     const block = blocks[i];
-    if(!block) return;
+    if(!block || !q) return;
     block.querySelector('.qb-question').value = q.question || '';
     const opts = block.querySelectorAll('.qb-opt');
     opts[0].value = (q.options && q.options[0]) || '';
@@ -553,6 +598,8 @@ document.getElementById('btn-start').addEventListener('click', () => {
 
   showScreen('screen-cover');
 });
+
+loadPublished();
 </script>
 </body>
 </html>
