@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bon anniversaire Papy 🎉</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --azulejo: #2C5F8A;
+    --azulejo-dark: #17324A;
+    --cream: #F4EEDF;
+    --terracotta: #C1502E;
+    --gold: #E3A542;
+    --pine: #1B5E4F;
+    --ink: #1D2B36;
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Work Sans', sans-serif;
+    --font-hand: 'Caveat', cursive;
+  }
+  * { box-sizing: border-box; }
+  body{
+    margin:0; min-height:100vh; background:var(--cream);
+    font-family:var(--font-body); color:var(--ink); overflow-x:hidden;
+  }
+  #app{ position:relative; min-height:100vh; }
+  .screen{
+    display:none; min-height:100vh; flex-direction:column; align-items:center;
+    justify-content:center; padding:32px 20px 60px; text-align:center;
+    animation:fadeIn .5s ease both;
+  }
+  .screen.active{ display:flex; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+
+  .tile-strip{
+    width:100%; height:26px; background-color:var(--azulejo);
+    background-image:radial-gradient(circle at 50% 50%, var(--cream) 0 5px, transparent 6px);
+    background-size:26px 26px; box-shadow:inset 0 0 0 2px var(--azulejo-dark);
+  }
+
+  #screen-cover{ padding:0; justify-content:space-between; position:relative; }
+  .cover-card{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:20px; }
+  .eyebrow{ font-size:.9rem; letter-spacing:.14em; text-transform:uppercase; color:var(--azulejo); font-weight:600; }
+  .cover-title{ font-family:var(--font-display); font-size:clamp(2.2rem,8vw,3.4rem); margin:0; color:var(--terracotta); line-height:1.05; }
+  .cover-sub{ margin:0; opacity:.75; }
+  .gear-btn{
+    position:absolute; top:18px; right:18px; background:none; border:2px solid var(--azulejo);
+    color:var(--azulejo); border-radius:999px; padding:6px 12px; font-size:.85rem; cursor:pointer;
+  }
+
+  .btn-seal{
+    margin-top:18px; background:var(--terracotta); color:var(--cream); border:none; border-radius:999px;
+    padding:14px 30px; font-family:var(--font-body); font-weight:600; font-size:1rem; cursor:pointer;
+    box-shadow:0 6px 0 var(--azulejo-dark); transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-seal:hover{ transform:translateY(2px); box-shadow:0 4px 0 var(--azulejo-dark); }
+  .btn-seal:active{ transform:translateY(6px); box-shadow:0 0 0 var(--azulejo-dark); }
+  .btn-seal.small{ padding:10px 20px; font-size:.9rem; box-shadow:0 4px 0 var(--azulejo-dark); margin-top:0; }
+
+  .btn-back{
+    position:absolute; top:18px; left:18px; background:none; border:2px solid var(--azulejo);
+    color:var(--azulejo); border-radius:50%; width:38px; height:38px; font-size:1.1rem; cursor:pointer;
+  }
+
+  .message-card{
+    max-width:520px; background:#fff; border-radius:18px; padding:28px 26px;
+    box-shadow:0 10px 30px rgba(23,50,74,.12); border:3px solid var(--azulejo);
+  }
+  .hand-note{ font-family:var(--font-hand); font-size:1.5rem; line-height:1.4; white-space:pre-line; margin:0 0 10px; }
+  .signature{ font-family:var(--font-hand); font-size:1.3rem; color:var(--terracotta); margin:0; }
+  .hint{ margin-top:18px; font-size:.9rem; opacity:.7; }
+
+  .candles{ display:flex; gap:14px; margin-top:22px; flex-wrap:wrap; justify-content:center; }
+  .candle{ width:14px; height:60px; background:repeating-linear-gradient(45deg,var(--gold),var(--gold) 6px,#f3cf87 6px,#f3cf87 12px); border-radius:4px; position:relative; cursor:pointer; }
+  .candle .flame{
+    position:absolute; top:-18px; left:50%; transform:translateX(-50%); width:12px; height:18px;
+    background:radial-gradient(circle at 50% 70%, #fff3b0, var(--terracotta) 70%);
+    border-radius:50% 50% 50% 50% / 60% 60% 40% 40%; animation:flicker 1s infinite alternate ease-in-out;
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  .candle.out .flame{ opacity:0; transform:translateX(-50%) translateY(6px) scale(.4); }
+  @keyframes flicker{ from{transform:translateX(-50%) scale(1);} to{transform:translateX(-50%) scale(.9) rotate(3deg);} }
+
+  .nav-tiles{ display:flex; gap:16px; margin-top:26px; flex-wrap:wrap; justify-content:center; }
+  .nav-tile{
+    background:var(--azulejo); color:#fff; border:none; border-radius:14px; padding:16px 20px;
+    font-weight:600; font-size:1rem; cursor:pointer; display:flex; flex-direction:column; align-items:center;
+    gap:6px; min-width:130px; box-shadow:0 6px 0 var(--azulejo-dark);
+  }
+  .nav-tile:hover{ transform:translateY(2px); box-shadow:0 4px 0 var(--azulejo-dark); }
+
+  .gallery-frame{
+    position:relative; width:min(90vw,420px); height:min(60vw,300px); border-radius:16px;
+    overflow:hidden; border:4px solid var(--azulejo); background:var(--azulejo-dark);
+  }
+  .gallery-placeholder{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:8px; color:#fff; opacity:.8; font-size:.9rem; padding:20px; text-align:center;
+  }
+  .gallery-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .4s ease; }
+  #gallery-caption{ max-width:420px; font-family:var(--font-hand); font-size:1.3rem; margin-top:14px; }
+  .gallery-controls{ display:flex; gap:12px; margin-top:16px; align-items:center; }
+  .gallery-controls button{
+    background:#fff; border:2px solid var(--azulejo); color:var(--azulejo); border-radius:999px;
+    padding:10px 16px; font-weight:600; cursor:pointer; font-family:var(--font-body);
+  }
+
+  #quiz-wrap{ max-width:480px; width:100%; }
+  .quiz-progress{ opacity:.6; margin:0 0 6px; font-size:.85rem; }
+  .quiz-question{ font-family:var(--font-display); font-size:1.4rem; color:var(--terracotta); margin:0 0 18px; }
+  .quiz-options{ display:flex; flex-direction:column; gap:10px; }
+  .quiz-option{ background:#fff; border:2px solid var(--azulejo); color:var(--ink); border-radius:12px; padding:12px 16px; font-size:1rem; cursor:pointer; text-align:left; }
+  .quiz-option:disabled{ opacity:.6; cursor:default; }
+  .quiz-feedback{ margin-top:16px; font-size:1rem; }
+  .quiz-end-title{ font-family:var(--font-display); font-size:1.8rem; color:var(--pine); margin-bottom:6px; }
+
+  .confetti-layer{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:50; }
+  .confetto{ position:absolute; top:-20px; width:8px; height:14px; border-radius:2px; animation:fall linear forwards; }
+  @keyframes fall{ to{ transform:translateY(110vh) rotate(360deg); opacity:.9; } }
+
+  h2{ font-family:var(--font-display); color:var(--azulejo-dark); margin-top:0; }
+
+  /* --- écran réglages --- */
+  .setup-card{
+    max-width:560px; width:100%; background:#fff; border-radius:18px; padding:26px 22px 34px;
+    box-shadow:0 10px 30px rgba(23,50,74,.12); border:3px solid var(--azulejo); text-align:left;
+  }
+  .setup-card h2{ text-align:center; margin-top:0; }
+  .setup-hint{ text-align:center; opacity:.7; font-size:.9rem; margin-top:-6px; }
+  .setup-card label{ display:block; font-weight:600; font-size:.85rem; margin:16px 0 6px; color:var(--azulejo-dark); }
+  .setup-card input[type="text"], .setup-card input[type="number"], .setup-card textarea{
+    width:100%; padding:10px 12px; border:2px solid var(--azulejo); border-radius:10px;
+    font-family:var(--font-body); font-size:.95rem; background:var(--cream);
+  }
+  .setup-card textarea{ resize:vertical; }
+  .file-label{ display:inline-block; cursor:pointer; }
+  .photo-row{ display:flex; align-items:center; gap:10px; margin-top:8px; }
+  .photo-thumb{ width:52px; height:52px; object-fit:cover; border-radius:8px; border:2px solid var(--azulejo); flex-shrink:0; }
+  .photo-caption{ flex:1; }
+  .photo-remove{ background:none; border:none; color:var(--terracotta); font-size:1.1rem; cursor:pointer; }
+  .quiz-block{ border-top:1px dashed var(--azulejo); padding-top:12px; margin-top:14px; }
+  .qb-options{ display:flex; flex-direction:column; gap:6px; margin-top:6px; }
+  .qb-options input, .setup-card select{ padding:8px 10px; border:2px solid var(--azulejo); border-radius:8px; background:var(--cream); font-family:var(--font-body); width:100%; }
+  .setup-actions{ display:flex; gap:10px; justify-content:center; margin-top:22px; flex-wrap:wrap; }
+  #btn-start{ width:100%; margin-top:24px; }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ÉCRAN 0 : RÉGLAGES -->
+  <section id="screen-setup" class="screen active">
+    <div class="tile-strip"></div>
+    <div class="setup-card">
+      <h2>Prépare la carte de Papy 🎁</h2>
+      <p class="setup-hint">Remplis tes infos, ajoute tes photos, garde ou modifie les questions du quiz.</p>
+
+      <label>Prénom de Papy</label>
+      <input type="text" id="input-name" placeholder="ex : Manuel">
+
+      <label>Ton message perso</label>
+      <textarea id="input-message" rows="6">Cher Papy,
+
+Aujourd'hui c'est ton anniversaire et je voulais te faire un cadeau qui vient vraiment de moi, alors j'ai codé toute cette petite carte rien que pour toi.
+
+Écris ici un souvenir, une phrase que tu dis souvent, ce que tu représentes pour moi...
+
+On t'aime très fort. Bon anniversaire ❤️🇵🇹</textarea>
+
+      <label>Signature</label>
+      <input type="text" id="input-signature" value="— Ta petite-fille qui t'aime">
+
+      <label>Nombre de bougies à souffler</label>
+      <input type="number" id="input-candles" value="5" min="1" max="12">
+
+      <label>Tes photos (tu peux en choisir plusieurs d'un coup)</label>
+      <input type="file" id="input-photos" accept="image/*" multiple>
+      <div id="photo-list"></div>
+
+      <label>Musique ou message vocal (optionnel — un enregistrement vocal marche très bien !)</label>
+      <input type="file" id="input-audio" accept="audio/*">
+
+      <h3 style="margin-top:24px;">Le quiz</h3>
+      <div id="quiz-builder"></div>
+
+      <div class="setup-actions">
+        <button id="btn-save" class="btn-seal small" type="button">💾 Sauvegarder</button>
+        <label class="btn-seal small file-label">
+          📂 Charger une sauvegarde
+          <input type="file" id="input-load" accept="application/json" hidden>
+        </label>
+      </div>
+
+      <button id="btn-start" class="btn-seal" type="button">🎉 Voir la carte</button>
+    </div>
+    <div class="tile-strip"></div>
+  </section>
+
+  <!-- ÉCRAN 1 : COUVERTURE -->
+  <section id="screen-cover" class="screen">
+    <div class="tile-strip"></div>
+    <div class="cover-card">
+      <button class="gear-btn" data-target="screen-setup" type="button">⚙️ Modifier</button>
+      <p class="eyebrow">Uma surpresa para</p>
+      <h1 class="cover-title">Vovô <span id="grandpa-name-1"></span></h1>
+      <p class="cover-sub">De la part de toute ta famille 🇵🇹❤️</p>
+      <button id="btn-open" class="btn-seal" type="button">Ouvrir la carte</button>
+    </div>
+    <div class="tile-strip"></div>
+  </section>
+
+  <!-- ÉCRAN 2 : MESSAGE + BOUGIES -->
+  <section id="screen-message" class="screen">
+    <button class="btn-back" data-target="screen-cover" type="button">←</button>
+    <div class="message-card">
+      <p class="hand-note" id="message-text"></p>
+      <p class="signature" id="signature-text"></p>
+    </div>
+    <p class="hint" id="candle-hint">Souffle les bougies avant qu'elles fondent 🕯️ (clique dessus une par une)</p>
+    <div class="candles" id="candles"></div>
+    <div class="nav-tiles" id="nav-tiles" hidden>
+      <button class="nav-tile" data-target="screen-gallery" type="button">📷<span>Nos souvenirs</span></button>
+      <button class="nav-tile" data-target="screen-quiz" type="button">🎉<span>Le p'tit quiz</span></button>
+    </div>
+  </section>
+
+  <!-- ÉCRAN 3 : GALERIE + MUSIQUE -->
+  <section id="screen-gallery" class="screen">
+    <button class="btn-back" data-target="screen-message" type="button">←</button>
+    <h2>Nos souvenirs ensemble</h2>
+    <div class="gallery-frame">
+      <div class="gallery-placeholder" id="gallery-placeholder">🖼️<br>Ajoute des photos dans les réglages</div>
+      <img id="gallery-img" class="gallery-img" alt="souvenir de famille">
+    </div>
+    <p id="gallery-caption"></p>
+    <div class="gallery-controls">
+      <button id="prev-photo" type="button" aria-label="photo précédente">◀</button>
+      <button id="music-toggle" type="button">🎵 Musique</button>
+      <button id="next-photo" type="button" aria-label="photo suivante">▶</button>
+    </div>
+    <audio id="bg-audio" loop></audio>
+  </section>
+
+  <!-- ÉCRAN 4 : QUIZ -->
+  <section id="screen-quiz" class="screen">
+    <button class="btn-back" data-target="screen-message" type="button">←</button>
+    <h2>Le p'tit quiz de Papy</h2>
+    <div id="quiz-wrap"></div>
+  </section>
+
+</div>
+
+<script>
+function escapeHtml(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// --- navigation ---
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+document.querySelectorAll('[data-target]').forEach(btn => {
+  btn.addEventListener('click', () => showScreen(btn.dataset.target));
+});
+document.getElementById('btn-open').addEventListener('click', () => showScreen('screen-message'));
+
+// --- confetti ---
+function spawnConfetti(){
+  const colors = ['#C1502E', '#E3A542', '#2C5F8A', '#1B5E4F'];
+  const layer = document.createElement('div');
+  layer.className = 'confetti-layer';
+  document.body.appendChild(layer);
+  for(let i=0;i<40;i++){
+    const c = document.createElement('span');
+    c.className = 'confetto';
+    c.style.left = Math.random()*100 + 'vw';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration = (2 + Math.random()*1.5) + 's';
+    c.style.animationDelay = (Math.random()*0.4) + 's';
+    layer.appendChild(c);
+  }
+  setTimeout(() => layer.remove(), 4000);
+}
+
+// --- état global de la carte ---
+let photosState = [];   // édité pendant les réglages
+let cardPhotos = [];    // utilisé par l'écran galerie
+let cardQuiz = [];
+let cardAudioUrl = null;
+let photoIndex = 0;
+let quizIndex = 0;
+
+// --- upload photos ---
+document.getElementById('input-photos').addEventListener('change', (e) => {
+  Array.from(e.target.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      photosState.push({ dataUrl: reader.result, caption: '' });
+      renderPhotoList();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+});
+function renderPhotoList(){
+  const wrap = document.getElementById('photo-list');
+  wrap.innerHTML = '';
+  photosState.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'photo-row';
+    row.innerHTML = `
+      <img src="${p.dataUrl}" class="photo-thumb" alt="apercu">
+      <input type="text" class="photo-caption" data-i="${i}" placeholder="souvenir pour cette photo..." value="${escapeHtml(p.caption)}">
+      <button type="button" class="photo-remove" data-i="${i}">✕</button>
+    `;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('.photo-caption').forEach(inp => {
+    inp.addEventListener('input', e => { photosState[Number(e.target.dataset.i)].caption = e.target.value; });
+  });
+  wrap.querySelectorAll('.photo-remove').forEach(btn => {
+    btn.addEventListener('click', e => { photosState.splice(Number(e.target.dataset.i), 1); renderPhotoList(); });
+  });
+}
+
+// --- upload audio ---
+let audioDataUrl = null;
+document.getElementById('input-audio').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { audioDataUrl = reader.result; };
+  reader.readAsDataURL(file);
+});
+
+// --- quiz builder (réglages) ---
+const defaultQuiz = [
+  { question:"En quelle année Papy est né ?", options:["19XX","19XX","19XX"], correct:0, fact:"Et oui, Papy a XX ans cette année !" },
+  { question:"Papy vient de quelle région du Portugal ?", options:["Porto","Lisbonne","Un petit village"], correct:2, fact:"C'est là qu'il a grandi avant de venir en France." },
+  { question:"Quel est le plat préféré de Papy ?", options:["Bacalhau","Feijoada","Caldo verde"], correct:0, fact:"Impossible de dire non à ça !" },
+  { question:"Depuis combien de temps Papy vit en France ?", options:["10 ans","20 ans","Plus de 30 ans"], correct:2, fact:"Un sacré bout de chemin depuis le Portugal !" }
+];
+function buildQuizBuilder(){
+  const wrap = document.getElementById('quiz-builder');
+  wrap.innerHTML = '';
+  defaultQuiz.forEach((q, i) => {
+    const block = document.createElement('div');
+    block.className = 'quiz-block';
+    block.innerHTML = `
+      <label>Question ${i+1}</label>
+      <input type="text" class="qb-question" value="${escapeHtml(q.question)}">
+      <div class="qb-options">
+        <input type="text" class="qb-opt" data-opt="0" value="${escapeHtml(q.options[0])}">
+        <input type="text" class="qb-opt" data-opt="1" value="${escapeHtml(q.options[1])}">
+        <input type="text" class="qb-opt" data-opt="2" value="${escapeHtml(q.options[2])}">
+      </div>
+      <label>Bonne réponse</label>
+      <select class="qb-correct">
+        <option value="0" ${q.correct===0?'selected':''}>Réponse 1</option>
+        <option value="1" ${q.correct===1?'selected':''}>Réponse 2</option>
+        <option value="2" ${q.correct===2?'selected':''}>Réponse 3</option>
+      </select>
+      <label>Petite anecdote (affichée après la réponse)</label>
+      <input type="text" class="qb-fact" value="${escapeHtml(q.fact)}">
+    `;
+    wrap.appendChild(block);
+  });
+}
+buildQuizBuilder();
+function readQuizFromForm(){
+  return Array.from(document.querySelectorAll('.quiz-block')).map(block => ({
+    question: block.querySelector('.qb-question').value,
+    options: Array.from(block.querySelectorAll('.qb-opt')).map(o => o.value),
+    correct: Number(block.querySelector('.qb-correct').value),
+    fact: block.querySelector('.qb-fact').value
+  }));
+}
+function populateQuizBuilder(quizArr){
+  const blocks = document.querySelectorAll('.quiz-block');
+  quizArr.forEach((q, i) => {
+    const block = blocks[i];
+    if(!block) return;
+    block.querySelector('.qb-question').value = q.question || '';
+    const opts = block.querySelectorAll('.qb-opt');
+    opts[0].value = (q.options && q.options[0]) || '';
+    opts[1].value = (q.options && q.options[1]) || '';
+    opts[2].value = (q.options && q.options[2]) || '';
+    block.querySelector('.qb-correct').value = q.correct || 0;
+    block.querySelector('.qb-fact').value = q.fact || '';
+  });
+}
+
+// --- sauvegarder / charger ---
+document.getElementById('btn-save').addEventListener('click', () => {
+  const data = {
+    name: document.getElementById('input-name').value,
+    message: document.getElementById('input-message').value,
+    signature: document.getElementById('input-signature').value,
+    candleCount: Number(document.getElementById('input-candles').value) || 5,
+    photos: photosState,
+    audio: audioDataUrl,
+    quiz: readQuizFromForm()
+  };
+  const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'papy-config.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('input-load').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      document.getElementById('input-name').value = data.name || '';
+      document.getElementById('input-message').value = data.message || '';
+      document.getElementById('input-signature').value = data.signature || '';
+      document.getElementById('input-candles').value = data.candleCount || 5;
+      photosState = data.photos || [];
+      renderPhotoList();
+      audioDataUrl = data.audio || null;
+      if(data.quiz) populateQuizBuilder(data.quiz);
+    }catch(err){
+      alert("Ce fichier n'a pas l'air d'être une sauvegarde valide 🤔");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// --- bougies ---
+function buildCandles(count){
+  const candlesEl = document.getElementById('candles');
+  candlesEl.innerHTML = '';
+  document.getElementById('nav-tiles').hidden = true;
+  document.getElementById('candle-hint').textContent = "Souffle les bougies avant qu'elles fondent 🕯️ (clique dessus une par une)";
+  let blown = 0;
+  for(let i=0;i<count;i++){
+    const c = document.createElement('div');
+    c.className = 'candle';
+    c.innerHTML = '<div class="flame"></div>';
+    c.addEventListener('click', () => {
+      if(c.classList.contains('out')) return;
+      c.classList.add('out');
+      blown++;
+      if(blown === count){
+        document.getElementById('candle-hint').textContent = "Bon anniversaire Papy ! 🎉";
+        document.getElementById('nav-tiles').hidden = false;
+        spawnConfetti();
+      }
+    });
+    candlesEl.appendChild(c);
+  }
+}
+
+// --- galerie ---
+const galleryImg = document.getElementById('gallery-img');
+const galleryCaption = document.getElementById('gallery-caption');
+const galleryPlaceholder = document.getElementById('gallery-placeholder');
+function renderPhoto(){
+  if(!cardPhotos.length){
+    galleryImg.style.opacity = 0;
+    galleryPlaceholder.style.display = 'flex';
+    galleryCaption.textContent = '';
+    return;
+  }
+  galleryPlaceholder.style.display = 'none';
+  const p = cardPhotos[photoIndex];
+  galleryImg.style.opacity = 0;
+  galleryImg.onload = () => { galleryImg.style.opacity = 1; };
+  galleryImg.src = p.dataUrl;
+  galleryCaption.textContent = p.caption || '';
+}
+document.getElementById('prev-photo').addEventListener('click', () => {
+  if(!cardPhotos.length) return;
+  photoIndex = (photoIndex - 1 + cardPhotos.length) % cardPhotos.length;
+  renderPhoto();
+});
+document.getElementById('next-photo').addEventListener('click', () => {
+  if(!cardPhotos.length) return;
+  photoIndex = (photoIndex + 1) % cardPhotos.length;
+  renderPhoto();
+});
+
+// --- musique ---
+const audioEl = document.getElementById('bg-audio');
+const musicBtn = document.getElementById('music-toggle');
+let playing = false;
+musicBtn.addEventListener('click', () => {
+  if(!playing){
+    audioEl.play().then(() => { playing = true; musicBtn.textContent = '⏸ Musique'; })
+      .catch(() => { musicBtn.textContent = '🚫 Pas de musique ajoutée'; });
+  } else {
+    audioEl.pause(); playing = false; musicBtn.textContent = '🎵 Musique';
+  }
+});
+
+// --- quiz (affichage carte) ---
+const quizWrap = document.getElementById('quiz-wrap');
+function renderQuiz(){
+  if(!cardQuiz.length){ quizWrap.innerHTML = '<p>Ajoute des questions dans les réglages.</p>'; return; }
+  if(quizIndex >= cardQuiz.length){ renderQuizEnd(); return; }
+  const q = cardQuiz[quizIndex];
+  quizWrap.innerHTML = `
+    <p class="quiz-progress">Question ${quizIndex+1} / ${cardQuiz.length}</p>
+    <h3 class="quiz-question">${escapeHtml(q.question)}</h3>
+    <div class="quiz-options">
+      ${q.options.map((opt,i) => `<button type="button" class="quiz-option" data-i="${i}">${escapeHtml(opt)}</button>`).join('')}
+    </div>
+    <div class="quiz-feedback" id="quiz-feedback"></div>
+  `;
+  quizWrap.querySelectorAll('.quiz-option').forEach(btn => btn.addEventListener('click', onAnswer));
+}
+function onAnswer(e){
+  const i = Number(e.currentTarget.dataset.i);
+  const q = cardQuiz[quizIndex];
+  const correct = i === q.correct;
+  document.getElementById('quiz-feedback').innerHTML =
+    (correct ? '✅ ' : '❌ ') + escapeHtml(q.fact) + '<br><button type="button" id="quiz-next" class="btn-seal small">Suivant →</button>';
+  quizWrap.querySelectorAll('.quiz-option').forEach(b => b.disabled = true);
+  document.getElementById('quiz-next').addEventListener('click', () => { quizIndex++; renderQuiz(); });
+}
+function renderQuizEnd(){
+  quizWrap.innerHTML = `<p class="quiz-end-title">Bon anniversaire, Papy 🎂</p><p>On t'aime très fort ❤️</p>`;
+  spawnConfetti();
+}
+
+// --- démarrer la carte à partir du formulaire ---
+document.getElementById('btn-start').addEventListener('click', () => {
+  const name = document.getElementById('input-name').value || 'Papy';
+  document.getElementById('grandpa-name-1').textContent = name;
+  document.getElementById('message-text').textContent = document.getElementById('input-message').value;
+  document.getElementById('signature-text').textContent = document.getElementById('input-signature').value;
+
+  buildCandles(Number(document.getElementById('input-candles').value) || 5);
+
+  cardPhotos = photosState.slice();
+  cardQuiz = readQuizFromForm();
+  cardAudioUrl = audioDataUrl;
+
+  audioEl.pause(); playing = false; musicBtn.textContent = '🎵 Musique';
+  if(cardAudioUrl){ audioEl.src = cardAudioUrl; } else { audioEl.removeAttribute('src'); }
+
+  photoIndex = 0; renderPhoto();
+  quizIndex = 0; renderQuiz();
+
+  showScreen('screen-cover');
+});
+</script>
+</body>
+</html>
