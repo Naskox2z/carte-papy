@@ -100,6 +100,13 @@
   }
   .gallery-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .4s ease; }
   #gallery-caption{ max-width:420px; font-family:var(--font-hand); font-size:1.3rem; margin-top:14px; }
+  .gallery-categories{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:14px; max-width:460px; }
+  .cat-tab{
+    font-family:var(--font-body); font-weight:600; font-size:.78rem; background:#fff; border:2px solid var(--azulejo);
+    color:var(--azulejo); border-radius:999px; padding:6px 14px; cursor:pointer;
+  }
+  .cat-tab.active{ background:var(--azulejo); color:#fff; }
+  .photo-category{ width:100%; margin-top:6px; }
   .gallery-controls{ display:flex; gap:12px; margin-top:16px; align-items:center; }
   .gallery-controls button{
     background:#fff; border:2px solid var(--azulejo); color:var(--azulejo); border-radius:999px;
@@ -236,6 +243,7 @@ On t'aime très fort. Bon anniversaire ❤️🇵🇹</textarea>
   <section id="screen-gallery" class="screen">
     <button class="btn-back" data-target="screen-message" type="button">←</button>
     <h2>Nos souvenirs ensemble</h2>
+    <div class="gallery-categories" id="gallery-categories"></div>
     <div class="gallery-frame">
       <div class="gallery-placeholder" id="gallery-placeholder">🖼️<br>Ajoute des photos dans les réglages</div>
       <img id="gallery-img" class="gallery-img" alt="souvenir de famille">
@@ -306,7 +314,7 @@ async function loadPublished(){
     const res = await fetch('./published.json', { cache: 'no-store' });
     if(!res.ok) return;
     const data = await res.json();
-    if(data.grandpaName) document.getElementById('input-name').value = data.grandpaName;
+    if(data.name) document.getElementById('input-name').value = data.name;
     if(data.message) document.getElementById('input-message').value = data.message;
     if(data.signature) document.getElementById('input-signature').value = data.signature;
     if(data.candleCount) document.getElementById('input-candles').value = data.candleCount;
@@ -323,7 +331,7 @@ async function loadPublished(){
 // à uploader sur le repo GitHub (à côté d'index.html) pour que ça apparaisse pour tout le monde
 function publishToLink(){
   const data = {
-    grandpaName: document.getElementById('input-name').value,
+    name: document.getElementById('input-name').value,
     message: document.getElementById('input-message').value,
     signature: document.getElementById('input-signature').value,
     candleCount: Number(document.getElementById('input-candles').value) || 5,
@@ -360,13 +368,19 @@ function renderPhotoList(){
     row.className = 'photo-row';
     row.innerHTML = `
       <img src="${p.dataUrl}" class="photo-thumb" alt="apercu">
-      <input type="text" class="photo-caption" data-i="${i}" placeholder="souvenir pour cette photo..." value="${escapeHtml(p.caption)}">
+      <div style="flex:1;">
+        <input type="text" class="photo-caption" data-i="${i}" placeholder="souvenir pour cette photo..." value="${escapeHtml(p.caption)}">
+        <input type="text" class="photo-category" data-i="${i}" placeholder="catégorie (ex: Jeunesse, Portugal, Famille...)" value="${escapeHtml(p.category||'')}">
+      </div>
       <button type="button" class="photo-remove" data-i="${i}">✕</button>
     `;
     wrap.appendChild(row);
   });
   wrap.querySelectorAll('.photo-caption').forEach(inp => {
     inp.addEventListener('input', e => { photosState[Number(e.target.dataset.i)].caption = e.target.value; });
+  });
+  wrap.querySelectorAll('.photo-category').forEach(inp => {
+    inp.addEventListener('input', e => { photosState[Number(e.target.dataset.i)].category = e.target.value; });
   });
   wrap.querySelectorAll('.photo-remove').forEach(btn => {
     btn.addEventListener('click', e => { photosState.splice(Number(e.target.dataset.i), 1); renderPhotoList(); });
@@ -509,28 +523,50 @@ function buildCandles(count){
 const galleryImg = document.getElementById('gallery-img');
 const galleryCaption = document.getElementById('gallery-caption');
 const galleryPlaceholder = document.getElementById('gallery-placeholder');
+let currentGalleryCategory = 'Tous';
+function getFilteredPhotos(){
+  if(currentGalleryCategory === 'Tous') return cardPhotos;
+  return cardPhotos.filter(p => (p.category || 'Général') === currentGalleryCategory);
+}
+function renderCategoryTabs(){
+  const wrap = document.getElementById('gallery-categories');
+  const cats = ['Tous', ...new Set(cardPhotos.map(p => p.category || 'Général'))];
+  if(cats.length <= 2){ wrap.innerHTML = ''; return; } // pas besoin d'onglets s'il n'y a qu'une catégorie
+  wrap.innerHTML = cats.map(c => `<button type="button" class="cat-tab ${c === currentGalleryCategory ? 'active' : ''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join('');
+  wrap.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentGalleryCategory = btn.dataset.cat;
+      photoIndex = 0;
+      renderCategoryTabs();
+      renderPhoto();
+    });
+  });
+}
 function renderPhoto(){
-  if(!cardPhotos.length){
+  const list = getFilteredPhotos();
+  if(!list.length){
     galleryImg.style.opacity = 0;
     galleryPlaceholder.style.display = 'flex';
     galleryCaption.textContent = '';
     return;
   }
   galleryPlaceholder.style.display = 'none';
-  const p = cardPhotos[photoIndex];
+  const p = list[photoIndex];
   galleryImg.style.opacity = 0;
   galleryImg.onload = () => { galleryImg.style.opacity = 1; };
   galleryImg.src = p.dataUrl;
   galleryCaption.textContent = p.caption || '';
 }
 document.getElementById('prev-photo').addEventListener('click', () => {
-  if(!cardPhotos.length) return;
-  photoIndex = (photoIndex - 1 + cardPhotos.length) % cardPhotos.length;
+  const list = getFilteredPhotos();
+  if(!list.length) return;
+  photoIndex = (photoIndex - 1 + list.length) % list.length;
   renderPhoto();
 });
 document.getElementById('next-photo').addEventListener('click', () => {
-  if(!cardPhotos.length) return;
-  photoIndex = (photoIndex + 1) % cardPhotos.length;
+  const list = getFilteredPhotos();
+  if(!list.length) return;
+  photoIndex = (photoIndex + 1) % list.length;
   renderPhoto();
 });
 
@@ -589,6 +625,8 @@ document.getElementById('btn-start').addEventListener('click', () => {
   cardPhotos = photosState.slice();
   cardQuiz = readQuizFromForm();
   cardAudioUrl = audioDataUrl;
+  currentGalleryCategory = 'Tous';
+  renderCategoryTabs();
 
   audioEl.pause(); playing = false; musicBtn.textContent = '🎵 Musique';
   if(cardAudioUrl){ audioEl.src = cardAudioUrl; } else { audioEl.removeAttribute('src'); }
